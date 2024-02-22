@@ -44,8 +44,8 @@ class App:
 
 
         st.expander("Dataset information" ).write("""
-                                                "The "Diagnostic Wisconsin Breast Cancer Database" is a publicly available data set from the UCI machine learning repository." 
-                                                "The dataset gives information about tumor features, that are computed from a digitized image of a fine needle aspirate (FNA) of a breast mass." 
+                                                The "Diagnostic Wisconsin Breast Cancer Database" is a publicly available data set from the UCI machine learning repository.
+                                                The dataset gives information about tumor features, that are computed from a digitized image of a fine needle aspirate (FNA) of a breast mass.
                                                 For each observation there are 10 features, which describe tumor size, density, texture, symmetry, and other characteristics of the cell nuclei present in the image.
                                                 The mean, standard error and "worst" mean (mean of the three largest values) of these features were computed for each image, resulting in 30 features.
                                                 The categorical target feature indicates the type of the tumor.
