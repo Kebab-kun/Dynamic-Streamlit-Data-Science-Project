@@ -31,7 +31,7 @@ To get started with the project, follow these steps:
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your_username/Dynamic-Streamlit-Data-Science-Project.git
+    git clone https://github.com/Kebab-kun/Dynamic-Streamlit-Data-Science-Project.git
     ```
 
 2. Install dependencies:
