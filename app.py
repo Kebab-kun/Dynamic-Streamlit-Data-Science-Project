@@ -236,7 +236,7 @@ class App:
                             scoring='accuracy') 
             gs_NB.fit(X_train, y_train)
             st.write("best parameter values: ", gs_NB.best_params_)
-            self.best_param = int(gs_NB.best_params_["var_smoothing"])
+            self.best_param = gs_NB.best_params_["var_smoothing"]
 
 
     def add_parameter_ui(self):
