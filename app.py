@@ -12,9 +12,6 @@ from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
 
-import ydata_profiling as pp
-import streamlit.components.v1 as components
-
 
 class App:
 
