@@ -12,7 +12,8 @@ from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
 
-#TODO: feature Selection-extraction , when parameter change run only model function
+import ydata_profiling as pp
+import streamlit.components.v1 as components
 
 
 class App:
@@ -21,18 +22,22 @@ class App:
         self.data = None
         self.dataset_name = None 
         self.classifier_name = None
-        self.Init_Streamlit_Page()
+        
 
         self.params = dict()
         self.clf = None
         self.X, self.y = None, None
         self.best_param = None
+
+        self.cache = st.session_state.get('cache', {})
+        self.Init_Streamlit_Page()
    
     def run(self):
         self.get_dataset()
         self.data_preprocess_breast_cancer()
         self.parameter_tuning()
         self.add_parameter_ui()
+        self.models()
     
     def Init_Streamlit_Page(self):
 
@@ -71,9 +76,11 @@ class App:
     def get_dataset(self):
         
         if self.dataset_name == "Breast Cancer":
-            self.data = pd.read_csv("data.csv")
-            
-            self.data_intro()
+            if 'data' not in self.cache:
+                st.write("Loading Dataset...")
+                self.cache['data'] = pd.read_csv("data.csv")
+                self.data = self.cache['data']
+                self.data_intro()
 
             columns_without_suffix = [col.replace('_mean', '').replace('_worst', '').replace('_se', '') for col in self.data.columns]
             unique_columns = set(columns_without_suffix)
@@ -103,7 +110,7 @@ class App:
         st.write("Categorical Features:" , self.data.dtypes[self.data.dtypes == "object"])
 
 
-
+    
     def data_preprocess_breast_cancer(self):
         st.subheader("Data Preprocessing")
         st.write(f"***Drop Unnecessary Columns:*** id, Unnamed: 32")
@@ -117,29 +124,29 @@ class App:
         self.X = self.data.drop(["diagnosis"], axis=1)
         self.y = self.data["diagnosis"].values
 
-        self.target_value_corelation_plot()
-
+        st.session_state["Plot"] = self.target_value_corelation_plot()
         self.X = (self.X - self.X.min()) / (self.X.max() - self.X.min())
         st.write("***Normalized Data***: ", self.X.head(10))
 
-
-    def target_value_corelation_plot(self):
+    @st.cache_data
+    def target_value_corelation_plot(_self):
 
         tab1, tab2 = st.tabs(["🗃 Matrix", "📈 Plot"])
 
         with tab1:
             tab1.subheader("Correlation Matrix ")
-            if self.dataset_name == "Breast Cancer":
+            if _self.dataset_name == "Breast Cancer":
                 st.subheader("Target Value Corelation Plot")
                 # create correlation matrix
-                correlation_matrix = self.data.corr()
+                correlation_matrix = _self.data.corr()
+
                 st.write("Correlation Matrix:")
                 st.write(correlation_matrix)
                 st.write("##### Correlation Matrix Heatmap with Target Values:")
-                st.write(correlation_matrix['diagnosis'])
+                st.table(correlation_matrix['diagnosis'])
                
 
-
+        
         with tab2:
             tab2.subheader("Correlation Plot ")
 
@@ -164,8 +171,8 @@ class App:
             st.pyplot(plt)
 
      # Display scatter plot
-        malignant_data = self.data[self.data['diagnosis'] == 1]
-        benign_data = self.data[self.data['diagnosis'] == 0]
+        malignant_data = _self.data[_self.data['diagnosis'] == 1]
+        benign_data = _self.data[_self.data['diagnosis'] == 0]
         plt.figure(figsize=(8, 6))
         st.write("***Scatter Plot of Radius Mean vs Texture Mean:***")
         # Make scatter plot transparent with less opacity
@@ -181,25 +188,26 @@ class App:
         #postive correlation
         st.write("***Scatter Plot of positive correlation:***")
         fig,ax=plt.subplots(2,2,figsize=(20,25))
-        sns.scatterplot(x='perimeter_mean',y='radius_worst',data=self.data,hue='diagnosis',ax=ax[0][0])
-        sns.scatterplot(x='area_mean',y='radius_worst',data=self.data,hue='diagnosis',ax=ax[1][0])
-        sns.scatterplot(x='texture_mean',y='texture_worst',data=self.data,hue='diagnosis',ax=ax[0][1])
-        sns.scatterplot(x='area_worst',y='radius_worst',data=self.data,hue='diagnosis',ax=ax[1][1])
+        sns.scatterplot(x='perimeter_mean',y='radius_worst',data=_self.data,hue='diagnosis',ax=ax[0][0])
+        sns.scatterplot(x='area_mean',y='radius_worst',data=_self.data,hue='diagnosis',ax=ax[1][0])
+        sns.scatterplot(x='texture_mean',y='texture_worst',data=_self.data,hue='diagnosis',ax=ax[0][1])
+        sns.scatterplot(x='area_worst',y='radius_worst',data=_self.data,hue='diagnosis',ax=ax[1][1])
         st.pyplot(fig)       
 
         #negative correlation
         st.write("***Scatter Plot of negative correlation:***")
         fig,ax=plt.subplots(2,2,figsize=(20,25))
-        sns.scatterplot(x='area_mean',y='fractal_dimension_mean',data=self.data,hue='diagnosis',ax=ax[0][0])
-        sns.scatterplot(x='radius_mean',y='smoothness_se',data=self.data,hue='diagnosis',ax=ax[1][0])
-        sns.scatterplot(x='smoothness_se',y='perimeter_mean',data=self.data,hue='diagnosis',ax=ax[0][1])
-        sns.scatterplot(x='area_mean',y='smoothness_se',data=self.data,hue='diagnosis',ax=ax[1][1])
+        sns.scatterplot(x='area_mean',y='fractal_dimension_mean',data=_self.data,hue='diagnosis',ax=ax[0][0])
+        sns.scatterplot(x='radius_mean',y='smoothness_se',data=_self.data,hue='diagnosis',ax=ax[1][0])
+        sns.scatterplot(x='smoothness_se',y='perimeter_mean',data=_self.data,hue='diagnosis',ax=ax[0][1])
+        sns.scatterplot(x='area_mean',y='smoothness_se',data=_self.data,hue='diagnosis',ax=ax[1][1])
         st.pyplot(fig)
 
+    
     def parameter_tuning(self):
         st.subheader("**Model**")
-        st.write(f"***Classifier*** = {self.classifier_name}")
-
+        st.write(f"***Classifiers*** = {self.classifier_name}")
+        
         #### HYPERPARAMETER TUNING ####
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
 
@@ -251,8 +259,6 @@ class App:
     def models(self):
         self.get_classifier()
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
-        
-        
 
         self.clf.fit(X_train, y_train)
         y_pred = self.clf.predict(X_test)
