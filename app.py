@@ -12,6 +12,11 @@ from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
 
+# TODO: Check session state that unnecessary reload not happening (Caching not working)
+# TODO: Fix the storage of self.best_param as a dictionary and correct the process of finding the best parameters
+# TODO: Optimize the parameter search ranges for the models
+# TODO: Add a new dataset
+# TODO: Conduct a more in-depth Exploratory Data Analysis (EDA) for Breast Cancer dataset
 
 class App:
 
@@ -19,14 +24,12 @@ class App:
         self.data = None
         self.dataset_name = None 
         self.classifier_name = None
-        
 
         self.params = dict()
         self.clf = None
         self.X, self.y = None, None
         self.best_param = None
 
-        self.cache = st.session_state.get('cache', {})
         self.Init_Streamlit_Page()
    
     def run(self):
@@ -69,25 +72,24 @@ class App:
             ("KNN", "SVM", "Naive Bayes(GaussianNB)")
         )
 
-   
+    ### dataset can not be cached problem with self keyword occurs 
+    
     def get_dataset(self):
-        
         if self.dataset_name == "Breast Cancer":
-            if 'data' not in self.cache:
-                st.write("Loading Dataset...")
-                self.cache['data'] = pd.read_csv("data.csv")
-                self.data = self.cache['data']
-                self.data_intro()
+            try:
+                self.data = pd.read_csv("data.csv")
+                st.success("Dataset loaded successfully")
+                self.data_intro()    
+            except Exception as e:
+                st.write(f"An error occurred: {e}")
 
-            columns_without_suffix = [col.replace('_mean', '').replace('_worst', '').replace('_se', '') for col in self.data.columns]
-            unique_columns = set(columns_without_suffix)
-            st.write("Unique Parameters:", unique_columns)
-
+        columns_without_suffix = [col.replace('_mean', '').replace('_worst', '').replace('_se', '') for col in self.data.columns]
+        unique_columns = set(columns_without_suffix)
+        st.write("Unique Parameters:", unique_columns)
             
 
     def data_intro(self):
         st.write("Dataframe first 10 rows: ", self.data.head(10))
-
         st.write("Shape of Dataset: ", self.data.shape, "  *This dataset consists of 569 samples, each described by 33 features*")
         st.write("Target Value: ", self.data['diagnosis'].value_counts())
         st.write(f"*2 unique values in target column and they are {self.data['diagnosis'].unique()}, their count is {self.data['diagnosis'].value_counts()} respectively*")  
@@ -105,8 +107,7 @@ class App:
             st.write("No missing values in the dataset")
 
         st.write("Categorical Features:" , self.data.dtypes[self.data.dtypes == "object"])
-
-
+        
     
     def data_preprocess_breast_cancer(self):
         st.subheader("Data Preprocessing")
@@ -210,22 +211,22 @@ class App:
 
         if self.classifier_name == "KNN":
             kf=KFold(n_splits=5,shuffle=True,random_state=42)
-            parameter={'n_neighbors': np.arange(1, 30, 1)}
+            parameter={'n_neighbors': np.arange(1, 15, 1)}
             knn=KNeighborsClassifier()
-            knn_cv=GridSearchCV(knn, param_grid=parameter, cv=kf, verbose=1)
+            knn_cv=GridSearchCV(knn, param_grid=parameter, cv=kf, verbose=1, scoring='accuracy')
             knn_cv.fit(X_train, y_train)
             st.write("best parameter values: ", knn_cv.best_params_)
             self.best_param = knn_cv.best_params_["n_neighbors"]
 
         elif self.classifier_name == "SVM":
-            param_grid = {'C': np.arange(1, 100, 1), 'gamma': [1,0.1,0.01,0.001],'kernel': ['rbf', 'poly', 'linear']}
-            grid = GridSearchCV(SVC(), param_grid, refit = True, verbose = 3)
+            param_grid = {'C': np.arange(1, 10, 1), 'gamma': [1,0.1,0.01,0.001],'kernel': ['rbf', 'poly', 'linear']}
+            grid = GridSearchCV(SVC(), param_grid, refit = True, verbose = 3,scoring='accuracy')
             grid.fit(X_train, y_train)
             st.write("best parameter values: ", grid.best_params_)
             self.best_param = grid.best_params_["C"]    
 
         elif self.classifier_name == "Naive Bayes(GaussianNB)":
-            params_NB = {'var_smoothing': np.logspace(0,-9, num=10)}
+            params_NB = {'var_smoothing': np.arange(0.1,2.0)}
             gs_NB = GridSearchCV(estimator=GaussianNB(), 
                             param_grid=params_NB, 
                             cv=KFold(n_splits=5),
@@ -238,8 +239,10 @@ class App:
 
     def add_parameter_ui(self):
         if self.classifier_name == "SVM":
-            C = st.sidebar.slider("C", 1, 100,step=1, value= self.best_param)
+            C = st.sidebar.slider("C", 1, 10,step=1, value= self.best_param)
             self.params["C"] = C
+            gamma = st.sidebar.select_slider("gamma", options =[1,0.1,0.01,0.001], value= self.best_param)
+            self.params["gamma"] = gamma
             kernel = st.sidebar.radio("kernel", ("rbf", "poly", "linear")) 
             self.params["kernel"] = kernel
 
@@ -256,6 +259,9 @@ class App:
     def models(self):
         self.get_classifier()
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
+
+        st.write("parameters you chosen: ", self.params)
+        
 
         self.clf.fit(X_train, y_train)
         y_pred = self.clf.predict(X_test)
@@ -283,17 +289,14 @@ class App:
         plt.ylabel("y_true")
         st.pyplot(f)  
 
-
+    
     def get_classifier(self):
         if self.classifier_name == "KNN":
             self.clf = KNeighborsClassifier(n_neighbors=self.params["n_neighbors"])
         
         elif self.classifier_name == "SVM":
-            self.clf = SVC(C=self.params["C"])
+            self.clf = SVC(C=self.params["C"], kernel=self.params["kernel"],gamma=self.params["gamma"])
         
-        # GaussianNB : Tahmin edeceğiniz veri veya kolon sürekli (real,ondalıklı vs.) ise
-        # BernoulliNB : Tahmin edeceğiniz veri veya kolon ikili ise ( Evet/Hayır , Sigara içiyor/ İçmiyor vs.)??? daha kötü sonuç veriyor
-        # MultinomialNB : Tahmin edeceğiniz veri veya kolon nominal ise ( Int sayılar )
         
         elif self.classifier_name == "Naive Bayes(GaussianNB)":
             self.clf = GaussianNB(var_smoothing=self.params["var_smoothing"])
