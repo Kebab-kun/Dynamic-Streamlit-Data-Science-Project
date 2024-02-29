@@ -3,16 +3,19 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import seaborn as sns
 import pandas as pd
+import time
 
 
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.naive_bayes import GaussianNB, BernoulliNB
+from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
 
-# TODO: Check session state that unnecessary reload not happening (Caching not working)
+import ydata_profiling as yp
+import webbrowser
+
 # TODO: Fix the storage of self.best_param as a dictionary and correct the process of finding the best parameters
 # TODO: Optimize the parameter search ranges for the models
 # TODO: Add a new dataset
@@ -78,7 +81,15 @@ class App:
         if self.dataset_name == "Breast Cancer":
             try:
                 self.data = pd.read_csv("data.csv")
-                st.success("Dataset loaded successfully")
+                #success_message = st.success("Dataset loaded successfully")
+                with st.status("Downloading data...", expanded=True) as status:
+                    st.write("Searching for data...")
+                    time.sleep(2)
+                    st.write("Found URL.")
+                    time.sleep(1)
+                    st.write("Downloading data...")
+                    time.sleep(1)
+                    status.update(label="Download complete!", state="complete", expanded=False)
                 self.data_intro()    
             except Exception as e:
                 st.write(f"An error occurred: {e}")
@@ -86,9 +97,17 @@ class App:
         columns_without_suffix = [col.replace('_mean', '').replace('_worst', '').replace('_se', '') for col in self.data.columns]
         unique_columns = set(columns_without_suffix)
         st.write("Unique Parameters:", unique_columns)
-            
+    @st.cache_data
+    def generate_report(_self):
+        report = yp.ProfileReport(_self.data, explorative=True, minimal=True)
+        report.to_file(f"{_self.dataset_name} Report.html")
+        
 
     def data_intro(self):
+        report_button = st.button("Generate Dataset Variable Report")
+        if(report_button):
+            self.generate_report()
+            webbrowser.open(f"{self.dataset_name} Report.html")
         st.write("Dataframe first 10 rows: ", self.data.head(10))
         st.write("Shape of Dataset: ", self.data.shape, "  *This dataset consists of 569 samples, each described by 33 features*")
         st.write("Target Value: ", self.data['diagnosis'].value_counts())
@@ -122,7 +141,7 @@ class App:
         self.X = self.data.drop(["diagnosis"], axis=1)
         self.y = self.data["diagnosis"].values
 
-        st.session_state["Plot"] = self.target_value_corelation_plot()
+        self.target_value_corelation_plot()
         self.X = (self.X - self.X.min()) / (self.X.max() - self.X.min())
         st.write("***Normalized Data***: ", self.X.head(10))
 
