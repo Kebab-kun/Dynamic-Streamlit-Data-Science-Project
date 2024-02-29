@@ -76,7 +76,6 @@ class App:
         )
 
     ### dataset can not be cached problem with self keyword occurs 
-    
     def get_dataset(self):
         if self.dataset_name == "Breast Cancer":
             try:
@@ -84,19 +83,14 @@ class App:
                 #success_message = st.success("Dataset loaded successfully")
                 with st.status("Downloading data...", expanded=True) as status:
                     st.write("Searching for data...")
-                    time.sleep(2)
                     st.write("Found URL.")
-                    time.sleep(1)
                     st.write("Downloading data...")
-                    time.sleep(1)
-                    status.update(label="Download complete!", state="complete", expanded=False)
+                    status.update(label=f"{self.dataset_name} Dataset download complete!", state="complete", expanded=False)
                 self.data_intro()    
             except Exception as e:
                 st.write(f"An error occurred: {e}")
 
-        columns_without_suffix = [col.replace('_mean', '').replace('_worst', '').replace('_se', '') for col in self.data.columns]
-        unique_columns = set(columns_without_suffix)
-        st.write("Unique Parameters:", unique_columns)
+        
     @st.cache_data
     def generate_report(_self):
         report = yp.ProfileReport(_self.data, explorative=True, minimal=True)
@@ -153,7 +147,7 @@ class App:
         with tab1:
             tab1.subheader("Correlation Matrix ")
             if _self.dataset_name == "Breast Cancer":
-                st.subheader("Target Value Corelation Plot")
+                
                 # create correlation matrix
                 correlation_matrix = _self.data.corr()
 
@@ -169,7 +163,7 @@ class App:
 
             # Display the correlation matrix heatmap
             st.write("##### Correlation Matrix Heatmap All Features:")
-            plt.figure(figsize=(30, 10))
+            plt.figure(figsize=(30, 20))
             sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
             plt.title('Correlation Matrix Heatmap')
             plt.xticks(rotation=45)
@@ -279,7 +273,7 @@ class App:
         self.get_classifier()
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
 
-        st.write("parameters you chosen: ", self.params)
+        st.write("parameters you choose: ", self.params)
         
 
         self.clf.fit(X_train, y_train)
