@@ -1,10 +1,8 @@
 import streamlit as st 
 import numpy as np 
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import time
-
 
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.model_selection import KFold, train_test_split
@@ -163,11 +161,13 @@ class App:
 
             # Display the correlation matrix heatmap
             st.write("##### Correlation Matrix Heatmap All Features:")
-            plt.figure(figsize=(30, 20))
-            sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
-            plt.title('Correlation Matrix Heatmap')
-            plt.xticks(rotation=45)
-            plt.yticks(rotation=0)
+
+            plt.figure(figsize=(32, 16))
+            # Store heatmap object in a variable to easily access it when you want to include more features (such as title).
+            # Set the range of values to be displayed on the colormap from -1 to 1, and set the annotation to True to display the correlation values on the heatmap.
+            heatmap = sns.heatmap(correlation_matrix, vmin=-1, vmax=1, annot=True, cmap='BrBG')
+            # Give a title to the heatmap. Pad defines the distance of the title from the top of the heatmap.
+            heatmap.set_title('Correlation Heatmap', fontdict={'fontsize':12}, pad=12);
             st.pyplot(plt)
 
             # Display the correlation matrix heatmap with target values
@@ -175,7 +175,7 @@ class App:
 
             st.write("##### Correlation Matrix Heatmap with Target Values:")
             plt.figure(figsize=(10, 8))
-            sns.heatmap(diagnosis_correlation.to_frame(), annot=True, cmap='coolwarm', fmt=".2f", cbar=False)
+            sns.heatmap(diagnosis_correlation.to_frame(), annot=True, cmap='BrBG', fmt=".2f")
             plt.title('Correlation Matrix Heatmap with Target Values')
             plt.xticks(rotation=45)
             plt.yticks(rotation=0)
