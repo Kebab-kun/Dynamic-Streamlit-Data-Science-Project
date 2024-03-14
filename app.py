@@ -51,7 +51,7 @@ class App:
         if self.dataset_name == "Breast Cancer":  # Preprocess and visualize the dataset
             self.data_preprocess_breast_cancer()
             self.data_viz_breast_cancer()
-        elif self.dataset_name == "Airline Passenger Satisfaction":
+        elif self.dataset_name == "Airline Passanger Satisfaction":
             self.data_preprocess_airline_satisfaction()
             self.data_viz_airline_satisfaction()
 
