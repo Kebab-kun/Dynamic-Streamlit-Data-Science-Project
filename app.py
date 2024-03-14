@@ -109,39 +109,39 @@ class App:
             "Select Classifier",  # Classifier selection dropdown
             ("KNN", "SVM", "Naive Bayes(GaussianNB)"))
 
-def get_dataset(self):
-    """
-    Downloads the dataset and assigns it to the 'data' attribute of the class.
-    Also sets the task to be performed on the dataset based on the dataset name.
+    def get_dataset(self):
+        """
+        Downloads the dataset and assigns it to the 'data' attribute of the class.
+        Also sets the task to be performed on the dataset based on the dataset name.
 
-    Parameters:
-    None
+        Parameters:
+        None
 
-    Returns:
-    None
-    """
-    try:
-        # Check the dataset name and assign the appropriate dataset
-        if self.dataset_name == "Breast Cancer":
-            self.data = pd.read_csv("data.csv")  # Read the breast cancer dataset
-            task = "To predict whether the cancer is benign or malignant"
-        elif self.dataset_name == "Airline Passanger Satisfaction":
-            self.data = pd.read_csv("airline_satisfaction.csv", nrows=50000)  # Read the airline passenger satisfaction dataset
-            task = "To predict whether the customer is satisfied or unsatisfied"
+        Returns:
+        None
+        """
+        try:
+            # Check the dataset name and assign the appropriate dataset
+            if self.dataset_name == "Breast Cancer":
+                self.data = pd.read_csv("data.csv")  # Read the breast cancer dataset
+                task = "To predict whether the cancer is benign or malignant"
+            elif self.dataset_name == "Airline Passanger Satisfaction":
+                self.data = pd.read_csv("airline_satisfaction.csv", nrows=50000)  # Read the airline passenger satisfaction dataset
+                task = "To predict whether the customer is satisfied or unsatisfied"
 
-        # Display status messages while downloading the dataset
-        with st.status("Downloading data...", expanded=True) as status:
-            st.write("Searching for data...")
-            st.write("Found URL.")
-            st.write("Downloading data...")
-            status.update(label=f"{self.dataset_name} Dataset download complete!", state="complete", expanded=False)
-        
-        # Display the task to be performed
-        st.write(f"##### ***Task : {task}*** ")
-        self.data_intro()
-    except Exception as e:
-        # Display an error message if an exception occurs
-        st.write(f"An Error Occurred!: {e}")
+            # Display status messages while downloading the dataset
+            with st.status("Downloading data...", expanded=True) as status:
+                st.write("Searching for data...")
+                st.write("Found URL.")
+                st.write("Downloading data...")
+                status.update(label=f"{self.dataset_name} Dataset download complete!", state="complete", expanded=False)
+            
+            # Display the task to be performed
+            st.write(f"##### ***Task : {task}*** ")
+            self.data_intro()
+        except Exception as e:
+            # Display an error message if an exception occurs
+            st.write(f"An Error Occurred!: {e}")
         
     @st.cache_data
     def generate_report(_self):
