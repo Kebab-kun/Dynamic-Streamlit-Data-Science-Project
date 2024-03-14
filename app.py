@@ -1,4 +1,3 @@
-from sklearn.preprocessing import MinMaxScaler
 import streamlit as st 
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -12,6 +11,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import MinMaxScaler
 
 import ydata_profiling as yp
 import webbrowser
